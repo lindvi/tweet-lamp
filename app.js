@@ -5,6 +5,8 @@ var partyTime = false;
 var doNotSend = false;
 
 var tools = require('./pass');
+var utils = require('./utils');
+
 var _ = require('lodash');
 var moment = require('moment');
 var request = require('request');
@@ -78,85 +80,46 @@ stream.on('close', function(error){
   console.log(error);
 });
 
+var blink = {
+  method: 'PUT',
+  uri: tools.hue.uri,
+  body: { 
+    alert: "lselect",
+    xy: [rgb.x, rgb.y]
+  },
+  json:true
+};
 
+var decay = {
+  method: 'PUT',
+  uri: tools.hue.uri,
+  body: { 
+    xy: [rgb.x, rgb.y]
+  },
+  json:true
+};
 
+function startDecay() {
+  rgb.red = 0;
+  rgb.green = 0;
+  rgb.blue = 1;
+  intervalActive = false;
 
-/*
-request.put({
-    method: 'PUT',
-    URI: 'http://10.0.6.150/api/G558vOtyjwZtX2mL0P8AsUhqkLEKW1hssKN7Esys/lights/4/state/'
-  }, {
-    body: {
-      "on": "true"
-    }
-  }, function(data) {
-    console.log(data);
+  rp(blink)
+  .then(function (result) {
+    console.log('blink')
+    setTimeout(function() {
+      utils.calculateCurrentColor(function() {
+        rp(decay)
+        .then(function() {
+          intervalActive = true;
+          console.log('DONE');
+        }) 
+      })
+
+    }, 3000);
   });
-
-  */
-
-  function calculateCurrentColor(callback) {
-    var red = (rgb.red > 0.04045) ? Math.pow((rgb.red + 0.055) / (1.0 + 0.055), 2.4) : (rgb.red / 12.92);
-    var green = (rgb.green > 0.04045) ? Math.pow((rgb.green + 0.055) / (1.0 + 0.055), 2.4) : (rgb.green / 12.92);
-    var blue = (rgb.blue > 0.04045) ? Math.pow((rgb.blue + 0.055) / (1.0 + 0.055), 2.4) : (rgb.blue / 12.92); 
-
-    var X = red * 0.664511 + green * 0.154324 + blue * 0.162028;
-    var Y = red * 0.283881 + green * 0.668433 + blue * 0.047685;
-    var Z = red * 0.000088 + green * 0.072310 + blue * 0.986039;
-
-    var x = X / (X + Y + Z);
-    var y = Y / (X + Y + Z);
-
-    rgb.x = x;
-    rgb.y = y;
-
-    if (typeof callback === 'function') {
-      callback();    
-    }
-  }
-
-
-
-  var blink = {
-    method: 'PUT',
-    uri: tools.hue.uri,
-    body: { 
-      alert: "lselect",
-      xy: [rgb.x, rgb.y]
-    },
-    json:true
-  };
-
-  var decay = {
-    method: 'PUT',
-    uri: tools.hue.uri,
-    body: { 
-      xy: [rgb.x, rgb.y]
-    },
-    json:true
-  };
-
-  function startDecay() {
-    rgb.red = 0;
-    rgb.green = 0;
-    rgb.blue = 1;
-    intervalActive = false;
-
-    rp(blink)
-    .then(function (result) {
-      console.log('blink')
-      setTimeout(function() {
-        calculateCurrentColor(function() {
-          rp(decay)
-          .then(function() {
-            intervalActive = true;
-            console.log('DONE');
-          }) 
-        })
-
-      }, 3000);
-    });
-  }
+}
 
 var MAX_TIME_SINCE_TWEET = 2*86400; // 48 hours
 
@@ -178,7 +141,7 @@ var interval = setInterval(function() {
     rgb.red = diff;
 
     if (doNotSend) {
-      calculateCurrentColor(function() {
+      utils.calculateCurrentColor(function() {
         var decay = {
           method: 'PUT',
           uri: tools.hue.uri,
