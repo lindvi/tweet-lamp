@@ -18,6 +18,15 @@ function calculateCurrentColor(callback) {
   }
 }
 
+var rgb = {
+  red: 0,
+  green: 0,
+  blue: 1,
+  x: 0,
+  y: 0
+};
+
 module.exports = {
-    calculateCurrentColor: calculateCurrentColor
+    calculateCurrentColor: calculateCurrentColor,
+    rgb: rgb
 };

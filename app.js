@@ -1,8 +1,7 @@
 // Initalizing
 var DEBUG = true;
 var intervalActive = true;
-var partyTime = false;
-var doNotSend = false;
+var doNotSend = true;
 
 var tools = require('./pass');
 var utils = require('./utils');
@@ -19,13 +18,6 @@ var client = new Twitter({
   access_token_secret: tools.env.TWITTER_ACCESS_TOKEN_SECRET
 });
 
-var rgb = {
-  red: 0,
-  green: 0,
-  blue: 1,
-  x: 0,
-  y: 0
-};
 
 var Stream = require('user-stream');
 var stream = new Stream({
@@ -85,7 +77,7 @@ var blink = {
   uri: tools.hue.uri,
   body: { 
     alert: "lselect",
-    xy: [rgb.x, rgb.y]
+    xy: [utils.rgb.x, utils.rgb.y]
   },
   json:true
 };
@@ -94,15 +86,15 @@ var decay = {
   method: 'PUT',
   uri: tools.hue.uri,
   body: { 
-    xy: [rgb.x, rgb.y]
+    xy: [utils.rgb.x, utils.rgb.y]
   },
   json:true
 };
 
 function startDecay() {
-  rgb.red = 0;
-  rgb.green = 0;
-  rgb.blue = 1;
+  utils.rgb.red = 0;
+  utils.rgb.green = 0;
+  utils.rgb.blue = 1;
   intervalActive = false;
 
   rp(blink)
@@ -137,8 +129,8 @@ var interval = setInterval(function() {
       doNotSend = true;
     }
 
-    rgb.blue = 1.0 - diff;
-    rgb.red = diff;
+    utils.rgb.blue = 1.0 - diff;
+    utils.rgb.red = diff;
 
     if (doNotSend) {
       utils.calculateCurrentColor(function() {
@@ -146,7 +138,7 @@ var interval = setInterval(function() {
           method: 'PUT',
           uri: tools.hue.uri,
           body: { 
-            xy: [rgb.x, rgb.y]
+            xy: [utils.rgb.x, utils.rgb.y]
           },
           json:true
         };
@@ -157,28 +149,6 @@ var interval = setInterval(function() {
           }
         });  
       });
-    }
-
-  }
-
-  if ((moment().day() === 5 && moment().hour() >= 16 && !partyTime) || (moment().day() === 6 && moment().hour() < 6 && !partyTime)) {
-    partyTime = true;
-    for(var i = 0; i < tools.hue.lounge.length; i++) {
-      var loop = {
-        method: 'PUT',
-        uri: tools.hue.short_uri + '' + tools.hue.lounge[i] + '/state',
-        body: { 
-          effect: 'colorloop',
-          transitiontime: 0
-        },
-        json:true
-      };
-
-      console.log(tools.hue.short_uri + tools.hue.lounge[i] + '/state')
-      rp(loop)
-      .then(function(result) {
-        console.log(result);
-      });  
     }
 
   }  
