@@ -1,0 +1,14 @@
+{
+  "name": "twitter-lamp",
+  "description": "twitter-lamp",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "lodash": "^4.17.4",
+    "moment": "^2.17.1",
+    "request": "^2.79.0",
+    "request-promise": "^4.1.1",
+    "twitter": "^1.7.0",
+    "user-stream": "0.0.8"
+  }
+}
